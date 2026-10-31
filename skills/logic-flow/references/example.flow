@@ -1,0 +1,57 @@
+# Correct pattern: STATE, ACTION, PROCESS nodes; transitions on edges only
+# The prepare scroll runs in both journeys below, so it lives in one reusable block.
+
+block prepare_scroll | Prepare scroll to play | Pull display back to prepare time, reset surviving tiles, then unwind the delta
+node pull | Pull phase tick | - | AppContext.State.cs | verified | process
+step pull | 1. Advance pull elapsed and interpolate display toward the anchor.
+node pull_done | Complete pull phase | Sole reset point of the scroll. | AppContext.State.cs | verified | checkpoint
+step pull_done | 1. Apply deferred long-hold resets and reset surviving tiles for prepare scroll.
+node unwind | Delta unwind tick | - | AppContext.State.cs | verified | process
+step unwind | 1. Decrease prepare delta at audio speed until zero.
+verify unwind | Display offset should track prepare delta during unwind.
+verify unwind | Confirm audio seeks to display time each unwind tick.
+node unwind_done | Complete delta unwind | - | AppContext.State.cs | verified | checkpoint
+step unwind_done | 1. Clear prepare delta and restore playback from the rewind exit state.
+edge pull -> pull | each frame while pull active
+edge pull -> pull_done | pull duration complete
+edge pull_done -> unwind | prepare delta still positive
+edge unwind -> unwind | each frame while delta positive
+edge unwind -> unwind_done | prepare delta reaches zero
+endblock
+
+flow demo | 00 · States and edges | Minimal pause slice showing node kinds
+node playing | APP_PLAY | - | AppContext.Api.cs | verified | checkpoint
+node pause_btn | PauseGame entry | - | AppContext.Api.cs | verified | checkpoint
+node pause_cut | Apply pause note cut | Resolves the pause keep line and purges tiles below it. | AppContext.State.cs | verified | checkpoint
+step pause_cut | 1. Resolve the keep line from live tiles.
+step pause_cut | 2. Purge every attached tile below the keep line.
+step pause_cut | 3. Save the resume anchor for the prepare scroll.
+node paused | APP_PAUSE | - | AppContext.Api.cs | verified | checkpoint
+node resume_btn | ResumeGame entry | - | AppContext.Api.cs | verified | checkpoint
+verify pause_btn | Context not initialized: return without state or tile writes.
+node resume_mode | Resume mode dispatch | - | AppContext.Api.cs | verified | checkpoint
+verify resume_btn | Resume rejected: return without state writes.
+node rewind | APP_REWIND | - | AppContext.State.cs | verified | checkpoint
+useblock scroll | prepare_scroll | Resume scroll runs with cause ResumeAfterPause and exit state APP_PLAY.
+edge playing -> pause_btn | player pauses
+edge pause_btn -> pause_cut | pause accepted
+edge pause_cut -> paused | note cut and anchor saved
+edge paused -> resume_btn | player resumes
+edge resume_btn -> resume_mode | resume accepted
+edge resume_mode -> rewind | prepare scroll opens the rewind window
+edge rewind -> scroll | pull duration and prepare time both positive
+edge rewind -> scroll.unwind | frozen delta already at target
+edge scroll -> playing | enter APP_PLAY
+end
+
+flow revive | 01 · Revive to playing | Revive tap reuses the same prepare scroll as resume
+node dead | APP_REVIVE | - | AppContext.Api.cs | verified | checkpoint
+node revive_tap | ReviveGame entry | - | AppContext.Api.cs | verified | checkpoint
+node rewind2 | APP_REWIND | - | AppContext.State.cs | verified | checkpoint
+node playing2 | APP_PLAY | - | AppContext.Api.cs | verified | checkpoint
+useblock scroll | prepare_scroll | Revive scroll reopens the window from the preserved death anchor.
+edge dead -> revive_tap | valid revive tap
+edge revive_tap -> rewind2 | revive window opened
+edge rewind2 -> scroll | prepared revive timing
+edge scroll -> playing2 | enter APP_PLAY
+end

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Logic Flow"
+  short_description: "Extract and render human-verifiable logic flows"
+  default_prompt: "Use $logic-flow to extract user-story-centered flows from the codebase and render them as an interactive HTML flow. Include every hack, workaround, second clock, defer flag, and recover+reschedule as spine nodes — not verify-only footnotes. Read references/hack-and-workaround-scan.md."

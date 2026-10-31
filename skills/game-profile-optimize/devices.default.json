@@ -1,0 +1,8 @@
+{
+  "_doc": "Default device tiers. A project overrides this with <perf dir>/devices.json (same shape). A phone joins a tier by its model string (the DEVICE line of the run log, adb shell getprop ro.product.model). A tier without a measured phone shows 'not measured' in the report; never estimate it.",
+  "tiers": [
+    { "id": "low", "label": "Low-end", "hint": "entry GPUs (Adreno 6xx low, Mali-G5x), about 3-4 GB RAM", "models": [] },
+    { "id": "mid", "label": "Mid-range", "hint": "Adreno 619-642 / Mali-G68-G78 class, 6-8 GB RAM", "models": [] },
+    { "id": "high", "label": "High-end", "hint": "Adreno 730+ / Immortalis class, 8 GB+ RAM", "models": [] }
+  ]
+}

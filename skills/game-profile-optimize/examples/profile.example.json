@@ -1,0 +1,47 @@
+{
+  "_doc": "Copy to <your repo>/.claude/perf/<game>/profile.json and fill in. Everything game-specific the scripts need is here; the skill itself knows no game. Remove this _doc.",
+  "id": "mygame",
+  "name": "My Game",
+  "project": "UnityProjectFolder",
+  "package": "com.company.mygame",
+  "logTag": "MYGAMEPERF",
+  "unitLabel": "level",
+  "units": { "level-01": "Forest", "level-02": "Desert" },
+  "sections": ["Start", "Mid", "End"],
+  "sectionLabels": { "Start": "Start" },
+  "levels": ["low", "medium", "high"],
+  "menus": {
+    "openScene": "Tools/Perf/Open Game Scene Alone",
+    "buildAndroid": "Tools/Perf/Build Android Dev APK"
+  },
+  "buildResultFile": "Library/perf-android/build.txt",
+  "stressScale": { "file": "Assets/Scenes/Game.unity", "key": "_renderScaleMultiplier", "release": 1.0 },
+  "runs": {
+    "grid": "quality={level} noauto=1 secs=5",
+    "ab": "quality=high noauto=1 ab={switches} units={unit}",
+    "shots": "quality=high noauto=1 shots=1 secs=1 units={units}"
+  },
+  "abLevel": "high",
+  "switches": ["props_off", "particles_off", "shadows_off", "unit_off"],
+  "costGroups": [
+    { "name": "Props", "switch": "props_off" },
+    { "name": "Particles", "switch": "particles_off" },
+    { "name": "Realtime shadows", "switch": "shadows_off" }
+  ],
+  "totalSwitch": "unit_off",
+  "definesCheck": { "define": "MY_DEFINE", "paths": ["ProjectSettings"] },
+  "page": {
+    "title": "My Game Android profile",
+    "fpsIntro": "One group of bars per level, one bar per quality level, on the phone. Pick the section; tick the stress scale to see the same levels at the stress render scale. A red ring marks a cell with frames over 33 ms.",
+    "stressLabel": "Stress scale x1.3 <small>(render multiplier)</small>",
+    "stressTag": " (stress x1.3)",
+    "scaleReleaseNote": "Release render scale at Low, Medium and High.",
+    "scaleStressNote": "Stress render scale at Low, Medium and High.",
+    "shotsIntro": "High quality level on the phone, in play.",
+    "shotAlt": " in play",
+    "shotCaption": " · High level, in play",
+    "costIntro": "Measured at High. Negative readings count as 0.",
+    "costNote": "What is on at every level, how the quality levels differ, what a section is. Slow frames are frames over 33 ms: a missed 60 Hz frame or worse."
+  },
+  "artifact": ""
+}
