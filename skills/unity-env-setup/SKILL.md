@@ -21,8 +21,8 @@ Machine- and project-agnostic. Order of preference for driving an Editor: **Unit
 
 ## Rule 0: Git LFS first, Safe Mode second (the two things that most often leave an agent stuck)
 
-1. In a fresh clone or worktree, or after switching branches, run `git lfs pull` **before** opening the Editor. Binaries (DOTween.dll, textures, audio) are LFS pointers until then: the first import fails with hundreds of compile errors and the Editor sits in Safe Mode. `ensure-editor.sh` does this for you. A tracked binary that is a ~130-byte text file starting with `version https://git-lfs` is still a pointer.
-2. If the Editor shows "Enter Safe Mode?" or stays in Safe Mode, click **Ignore** (or **Exit Safe Mode**) with computer use; do not ask the user to do it and do not kill the Editor (`reference/editor-lifecycle.md`).
+1. In a fresh clone or worktree, or after switching branches, run `git lfs pull` **before** opening the Editor. Binaries (DOTween.dll, textures, audio) are LFS pointers until then: the first import fails with hundreds of compile errors and the Editor sits in Safe Mode. `ensure-editor.sh` does this for you; for first-time LFS setup of a repo (`.gitattributes`, fast-forward-only config) see the `git-workflow` skill. A tracked binary that is a ~130-byte text file starting with `version https://git-lfs` is still a pointer.
+2. Prefer avoiding the popup with Rule 0b (empty-project launch). If the Editor still shows "Enter Safe Mode?" or stays in Safe Mode, click **Ignore** (or **Exit Safe Mode**) with computer use; do not ask the user to do it and do not kill the Editor (`reference/editor-lifecycle.md`).
 3. Switch on **Start On Editor Launch** in Unity Skills for the project, so the REST port comes up on every launch (`reference/unity-skills-rest.md`, "Auto enable").
 4. Only after 1-3: Rule 1 below.
 
