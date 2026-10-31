@@ -13,6 +13,14 @@ Unity Technologies' own skills bundles.
 
 Verify: `curl -s localhost:8090/health` -> `"status":"ok"`, `projectName`, `currentMode`. A domain reload makes it unreachable for 2-5 s: retry.
 
+## Auto enable (set it to true in every project and worktree)
+
+Two toggles in `Window > UnitySkills > Settings > Server`, stored in EditorPrefs **per project** (the key carries a hash of the project path), so a new worktree starts with the defaults:
+- **Auto Start** (`SkillsHttpServer.AutoStart`, default true): restart the server after a domain reload.
+- **Start On Editor Launch** (`SkillsHttpServer.StartOnEditorLaunch`, default **false**): start the server when the Editor opens. While this is off, a freshly opened Editor has no REST port and `find-editor.sh` finds nothing.
+
+Set both to true. Once any route to the Editor works (Pipeline eval is enough): `unity-cli.sh cmd eval 'UnitySkills.SkillsHttpServer.AutoStart = true; UnitySkills.SkillsHttpServer.StartOnEditorLaunch = true; return "ok";'`. Otherwise open the Settings tab (computer use) and tick the toggles. Re-check in each new worktree's Editor.
+
 ## Several Editors: pick by project path
 
 Each Editor takes the next free port in 8090-8099 and registers in `~/.unity_skills/registry.json`. Names are identical across copies of a project, so match the **path**:

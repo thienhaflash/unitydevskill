@@ -13,7 +13,7 @@ MAX="${MAX_EDITORS:-5}"; TIMEOUT="${READY_TIMEOUT:-120}"
 
 if port="$("$here/find-editor.sh" "$proj" 2>/dev/null)"; then echo "$port"; exit 0; fi
 
-running="$(pgrep -fl 'Unity.app/Contents/MacOS/Unity( |$)' 2>/dev/null | grep -vc -- '-batchmode' || true)"
+running="$(pgrep -fl 'Unity.app/Contents/MacOS/Unity( |$)' 2>/dev/null | grep -vci -- '-batchmode' || true)"   # -i: AssetImportWorker children run with -batchMode
 if [[ "${running:-0}" -ge "$MAX" ]]; then
   echo "cap: $running Editors already open (max $MAX). Not opening another. Close one you opened yourself (ask the user), or reuse an existing one." >&2; exit 2
 fi
@@ -21,6 +21,8 @@ fi
 if [[ -f "$proj/Temp/UnityLockfile" ]] && pgrep -f "projectPath $proj|-projectpath $proj" >/dev/null 2>&1; then
   echo "project already open, waiting for it to answer" >&2
 else
+  # LFS pointers instead of binaries make the first import fail and drop into Safe Mode
+  git -C "$proj" lfs pull >&2 || echo "git lfs pull failed: install git-lfs (brew install git-lfs && git lfs install); binaries may still be pointers" >&2
   ver="$(sed -n 's/^m_EditorVersion: *//p' "$proj/ProjectSettings/ProjectVersion.txt" | head -1)"
   bin="${UNITY_BIN:-/Applications/Unity/Hub/Editor/$ver/Unity.app/Contents/MacOS/Unity}"
   [[ -x "$bin" ]] || { echo "Editor $ver not found at $bin (set UNITY_BIN)" >&2; exit 4; }
@@ -28,8 +30,13 @@ else
   echo "launched Editor $ver for $proj (pid $!)" >&2
 fi
 end=$((SECONDS+TIMEOUT))
+enabled=0
 while (( SECONDS < end )); do
   if port="$("$here/find-editor.sh" "$proj" 2>/dev/null)"; then echo "$port"; exit 0; fi
+  # A new project has Unity Skills' "Start On Editor Launch" off, so no REST port ever appears. Reach the Editor over Pipeline and switch the server on (once).
+  if (( ! enabled )) && UNITY_PROJECT_PATH="$proj" bash "$here/unity-cli.sh" status 2>/dev/null | grep -Eq '"status"[[:space:]]*:[[:space:]]*"ready"'; then
+    UNITY_PROJECT_PATH="$proj" bash "$here/unity-cli.sh" cmd eval 'UnitySkills.SkillsHttpServer.AutoStart = true; UnitySkills.SkillsHttpServer.StartOnEditorLaunch = true; if (!UnitySkills.SkillsHttpServer.IsRunning) UnitySkills.SkillsHttpServer.Start(); return "skills enabled";' >&2 2>&1 && enabled=1
+  fi
   sleep 5
 done
 echo "Editor for $proj did not answer within ${TIMEOUT}s: treat as hung or blocked by a dialog. Not killed. Report to the user." >&2
